@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CinemaGuard — Psychoacoustic Audio Spike Detection</title>
+  <meta name="description" content="AI-powered psychoacoustic audio safety verification system for digital cinema audio. Detect harmful spikes using human perception models." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🎬</span>
+      <span class="logo-text">Cinema<strong>Guard</strong></span>
+      <span class="logo-badge">AI</span>
+    </div>
+    <nav class="header-nav">
+      <span class="nav-tag">Psychoacoustic Safety System</span>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════ HERO ══════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="hero-label">Digital Cinema Audio QA</div>
+    <h1 class="hero-title">Psychoacoustic Spike<br/><span class="gradient-text">Detection Engine</span></h1>
+    <p class="hero-sub">
+      Analyzes cinema audio tracks using human auditory perception models —
+      A-weighting, K-weighting (ITU-R BS.1770), and equal-loudness contours —
+      to detect harmful audio spikes before release.
+    </p>
+    <div class="hero-chips">
+      <span class="chip chip-blue">A-Weighting</span>
+      <span class="chip chip-purple">K-Weighting (LUFS)</span>
+      <span class="chip chip-green">Equal-Loudness ISO 226</span>
+      <span class="chip chip-orange">Clipping Detection</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MAIN ══════════════════════════ -->
+<main class="main">
+
+  <!-- ── Upload Panel ── -->
+  <section class="card upload-card" id="upload-section">
+    <div class="card-header">
+      <span class="card-icon">📁</span>
+      <h2>Load Audio Track</h2>
+    </div>
+
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".wav,.flac,.mp3,.ogg,.aac,.m4a,.aiff" hidden />
+      <div class="upload-icon">🎵</div>
+      <p class="upload-primary">Drop cinema audio file here</p>
+      <p class="upload-secondary">WAV · FLAC · MP3 · OGG · AAC · M4A · AIFF</p>
+      <button class="btn btn-outline" onclick="document.getElementById('file-input').click()" id="browse-btn">
+        Browse File
+      </button>
+    </div>
+
+    <div class="upload-actions">
+      <button class="btn btn-primary" id="analyze-btn" disabled>
+        <span class="btn-icon">🔬</span> Analyze Audio
+      </button>
+      <button class="btn btn-secondary" id="demo-btn">
+        <span class="btn-icon">⚡</span> Run Demo
+      </button>
+    </div>
+
+    <div class="file-info hidden" id="file-info">
+      <span class="file-icon">🎵</span>
+      <span id="file-name-display"></span>
+      <span class="file-size" id="file-size-display"></span>
+    </div>
+  </section>
+
+  <!-- ── Progress ── -->
+  <div class="progress-container hidden" id="progress-container">
+    <div class="progress-label" id="progress-label">Initializing pipeline…</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+    <div class="progress-steps" id="progress-steps">
+      <span class="step-item active" id="step-load">Loading</span>
+      <span class="step-sep">›</span>
+      <span class="step-item" id="step-segment">Segmentation</span>
+      <span class="step-sep">›</span>
+      <span class="step-item" id="step-psycho">Psychoacoustic</span>
+      <span class="step-sep">›</span>
+      <span class="step-item" id="step-detect">Spike Detection</span>
+      <span class="step-sep">›</span>
+      <span class="step-item" id="step-report">Report</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ RESULTS ════════════════════════ -->
+  <div id="results-section" class="hidden">
+
+    <!-- ── Safety Verdict Banner ── -->
+    <div class="verdict-banner" id="verdict-banner">
+      <div class="verdict-icon" id="verdict-icon">✅</div>
+      <div class="verdict-text">
+        <div class="verdict-label">Safety Verdict</div>
+        <div class="verdict-value" id="verdict-value">PASS</div>
+        <div class="verdict-msg" id="verdict-msg"></div>
+      </div>
+      <button class="btn btn-download" id="download-btn">
+        📄 Download PDF Report
+      </button>
+    </div>
+
+    <!-- ── Stats Grid ── -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- ── Timeline Chart ── -->
+    <div class="card chart-card">
+      <div class="card-header">
+        <span class="card-icon">📊</span>
+        <h2>Psychoacoustic Loudness Timeline</h2>
+        <div class="legend-row" id="legend-row"></div>
+      </div>
+      <div class="chart-wrapper">
+        <img id="timeline-chart" class="chart-img" alt="Loudness Timeline" />
+      </div>
+    </div>
+
+    <!-- ── Frequency Band Chart ── -->
+    <div class="card chart-card" id="band-chart-card">
+      <div class="card-header">
+        <span class="card-icon">🎚️</span>
+        <h2>Frequency Band Energy (Spike Frames)</h2>
+      </div>
+      <div class="chart-wrapper">
+        <img id="band-chart" class="chart-img" alt="Frequency Band Energy" />
+      </div>
+    </div>
+
+    <!-- ── Spike Table ── -->
+    <div class="card spike-table-card">
+      <div class="card-header">
+        <span class="card-icon">⚠️</span>
+        <h2>Spike Correction Log</h2>
+        <div class="table-filters" id="table-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="Clipping Artifact">Clipping</button>
+          <button class="filter-btn" data-filter="Editing Error">Editing Error</button>
+          <button class="filter-btn" data-filter="Cinematic Effect">Cinematic</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="spike-table" id="spike-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Type</th>
+              <th>Severity</th>
+              <th>Perceived Score</th>
+              <th>A-Weighted dB</th>
+              <th>LUFS</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody id="spike-tbody"></tbody>
+        </table>
+        <div class="no-spikes hidden" id="no-spikes">
+          <span class="no-spike-icon">🟢</span>
+          <p>No spikes match the current filter.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Global Stats ── -->
+    <div class="card global-stats-card">
+      <div class="card-header">
+        <span class="card-icon">📈</span>
+        <h2>Global Signal Statistics</h2>
+      </div>
+      <div class="global-stats-grid" id="global-stats-grid"></div>
+    </div>
+
+  </div><!-- /results-section -->
+
+</main>
+
+<!-- ═══════════════════════ FOOTER ════════════════════════ -->
+<footer class="footer">
+  <p>
+    CinemaGuard &nbsp;·&nbsp; Psychoacoustic Audio Safety Verification &nbsp;·&nbsp;
+    ITU-R BS.1770 &amp; ISO 226 compliant &nbsp;·&nbsp; © 2026
+  </p>
+</footer>
+
+<!-- ═══════════════════════ TOAST ═════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
