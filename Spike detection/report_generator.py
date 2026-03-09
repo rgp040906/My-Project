@@ -218,7 +218,7 @@ def generate_pdf_report(report: "SpikeReport", output_path: str) -> str:
     summ = report.summary
 
     # ── Title ──
-    story.append(Paragraph("🎬 Psychoacoustic Audio Safety Report", title_style))
+    story.append(Paragraph("Psychoacoustic Audio Safety Report", title_style))
     story.append(Paragraph(f"Cinema Audio Spike Detection — {datetime.now().strftime('%Y-%m-%d %H:%M')}", body_style))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#dddddd")))
     story.append(Spacer(1, 10))
@@ -304,7 +304,6 @@ def generate_pdf_report(report: "SpikeReport", output_path: str) -> str:
             ("ROWBACKGROUNDS", (0, 1), (-1, -1),
              [colors.white, colors.HexColor("#f9f9f9")]),
             ("VALIGN",     (0, 0), (-1, -1), "TOP"),
-            ("WORDWRAP",   (4, 1), (4, -1), True),
         ])
         for row_i, sp in enumerate(report.spike_frames[:50], start=1):
             hex_c = sev_color_map.get(sp.severity, "#888888")

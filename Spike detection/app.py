@@ -177,17 +177,33 @@ def _run_pipeline(audio_path: str, job_id: str) -> dict:
     report   = detector.analyze(frame_results, global_stats, processor.metadata)
 
     # 4. Generate charts (base64 PNG)
-    timeline_b64 = build_timeline_chart(report)
-    band_b64     = build_band_chart(report)
+    try:
+        timeline_b64 = build_timeline_chart(report)
+    except Exception as chart_err:
+        print(f"[WARN] Timeline chart failed: {chart_err}")
+        timeline_b64 = ""
+    try:
+        band_b64 = build_band_chart(report)
+    except Exception as chart_err:
+        print(f"[WARN] Band chart failed: {chart_err}")
+        band_b64 = ""
 
-    # 5. Generate PDF
+    # 5. Generate PDF (non-blocking — failure won't block the JSON response)
     pdf_path = str(REPORT_DIR / f"{job_id}.pdf")
-    generate_pdf_report(report, pdf_path)
-    jobs[job_id] = {"pdf_path": pdf_path}
+    pdf_ok = False
+    try:
+        generate_pdf_report(report, pdf_path)
+        pdf_ok = True
+        print(f"[INFO] PDF saved: {pdf_path}")
+    except Exception as pdf_err:
+        print(f"[ERROR] PDF generation failed: {pdf_err}")
+        import traceback; traceback.print_exc()
+    jobs[job_id] = {"pdf_path": pdf_path if pdf_ok else None}
 
     # 6. Build JSON response
     json_report = generate_json_report(report)
     json_report["job_id"]             = job_id
+    json_report["pdf_ready"]          = pdf_ok
     json_report["timeline_chart"]     = timeline_b64
     json_report["band_chart"]         = band_b64
     json_report["loudness_timeline"]  = report.loudness_timeline

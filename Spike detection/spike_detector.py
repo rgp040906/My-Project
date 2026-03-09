@@ -44,32 +44,17 @@ class SpikeReport:
 # ─────────────────────────── Thresholds ───────────────────────────────────
 
 DEFAULT_THRESHOLDS = {
-    # --- Adaptive detection (percentile-based) ---
-    "spike_percentile":         97.0,   # top 3% loudest frames
-    "min_above_median":          4.0,   # must be > median + this
-    "absolute_floor":           44.0,   # never flag below this
-
-    # Severity boundaries (absolute perceived_score 0-100)
-    "perceived_score_medium":   55.0,
-    "perceived_score_high":     68.0,
-    "perceived_score_critical": 82.0,
-
-    # Raw dBFS clipping threshold
-    "raw_db_clip_warn":        -1.5,
-
-    # Temporal deduplication — merge spikes closer than this into one
-    # 1.5s ensures a single loud musical phrase = 1 spike, not many
+    "spike_percentile":         95.0,
+    "min_above_median":          8.0,
+    "absolute_floor":           30.0,
+    "perceived_score_medium":   45.0,
+    "perceived_score_high":     62.0,
+    "perceived_score_critical": 78.0,
+    "raw_db_clip_warn":         -3.0,
     "min_spike_gap_sec":         1.5,
-
-    # Delta (change in score between consecutive 20ms frames):
-    # Real audio dynamics routinely jump 10-15 pts during normal playback.
-    # Only flag as Editing Error if the jump is truly abrupt (≥ 25 pts).
-    "delta_score_error":        25.0,   # truly sudden cut
-    "delta_score_cinematic":    12.0,   # gradual rise
-
-    # Context window: if this many neighboring frames are also above
-    # threshold → the loud section is SUSTAINED → always Cinematic Effect
-    "sustained_neighbor_count":  3,     # frames on each side to check
+    "delta_score_error":        20.0,
+    "delta_score_cinematic":    10.0,
+    "sustained_neighbor_count":  3,
 }
 
 
@@ -307,21 +292,38 @@ class SpikeDetector:
             type_counts[s.spike_type] = type_counts.get(s.spike_type, 0) + 1
             sev_counts[s.severity]    = sev_counts.get(s.severity, 0) + 1
 
-        critical = sev_counts["Critical"]
-        high     = sev_counts["High"]
-        errors   = type_counts["Editing Error"]
-        clips    = type_counts["Clipping Artifact"]
+        clips     = type_counts["Clipping Artifact"]
+        cinematic = type_counts["Cinematic Effect"]
+        errors    = type_counts["Editing Error"]
+        critical  = sev_counts["Critical"]
+        high      = sev_counts["High"]
 
-        if critical > 0 or clips > 0:
+        # FAIL: waveform clipping (always dangerous) OR 3+ critical non-cinematic spikes
+        critical_non_cinematic = sum(
+            1 for s in spikes
+            if s.severity == "Critical" and s.spike_type != "Cinematic Effect"
+        )
+        if clips > 0 or critical_non_cinematic >= 3:
             verdict = "FAIL"
-            msg = (f"{critical} critical spike(s) and {clips} clipping artifact(s) detected. "
-                   "Audio MUST be corrected before cinema release.")
-        elif high > 3 or errors > 5:
+            msg = (
+                f"{clips} clipping artifact(s) and {critical_non_cinematic} critical "
+                "non-cinematic spike(s) detected. Audio MUST be corrected before cinema release."
+            )
+        elif critical > 3 or (high + critical) > 6:
             verdict = "REVIEW"
-            msg = "Multiple high-severity spikes detected. Engineering review recommended before release."
+            msg = (
+                f"{critical} critical and {high} high-severity spike(s) detected. "
+                "Engineering review recommended — verify against SMPTE ST 202 limits."
+            )
+        elif errors > 3 or critical > 1:
+            verdict = "PASS WITH NOTES"
+            msg = (
+                f"{errors} editing discontinuity(ies) and {critical} critical cinematic spike(s) found. "
+                "Recommend review before release, but not blocking."
+            )
         else:
             verdict = "PASS WITH NOTES"
-            msg = "Minor spikes found. Review recommended but not blocking release."
+            msg = "Minor spikes found. Review recommended but audio is acceptable for release."
 
         return {
             "total_spikes":       len(spikes),

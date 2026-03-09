@@ -1,0 +1,55 @@
+CinemaGuard - Score Diagnostics v3
+=================================================================
+
+FILE: test_no_spike.wav
+  Frames total    : 1499
+  Score min       : 54.51
+  Score mean      : 55.73
+  Score median    : 54.83
+  Score max       : 69.05
+  Score pct95     : 64.67
+  spike_thresh    : 64.67  (abs_floor=30.0)
+  Frames>=thresh  : 75
+  RMS dB min      : -27.84
+  RMS dB max      : -19.26
+  Clip frames (>=-3.0 dBFS): 0
+  Thresholds med/high/crit: 45.0/62.0/78.0
+  >> VERDICT: PASS WITH NOTES
+     spikes=3 critical=0 high=3 clips=0
+     msg: Minor spikes found. Review recommended but audio is acceptable for release.
+
+FILE: test_partial_spike.wav
+  Frames total    : 1499
+  Score min       : 50.52
+  Score mean      : 51.16
+  Score median    : 50.79
+  Score max       : 83.86
+  Score pct95     : 50.93
+  spike_thresh    : 58.79  (abs_floor=30.0)
+  Frames>=thresh  : 24
+  RMS dB min      : -30.19
+  RMS dB max      : -10.52
+  Clip frames (>=-3.0 dBFS): 0
+  Thresholds med/high/crit: 45.0/62.0/78.0
+  >> VERDICT: PASS WITH NOTES
+     spikes=4 critical=3 high=1 clips=0
+     msg: 1 editing discontinuity(ies) and 3 critical cinematic spike(s) found. Recommend review before release, but not blocking.
+
+FILE: test_full_spike.wav
+  Frames total    : 1499
+  Score min       : 67.62
+  Score mean      : 69.72
+  Score median    : 69.16
+  Score max       : 94.47
+  Score pct95     : 69.38
+  spike_thresh    : 77.16  (abs_floor=30.0)
+  Frames>=thresh  : 47
+  RMS dB min      : -20.11
+  RMS dB max      : -4.26
+  Clip frames (>=-3.0 dBFS): 0
+  Thresholds med/high/crit: 45.0/62.0/78.0
+  >> VERDICT: FAIL
+     spikes=9 critical=9 high=0 clips=0
+     msg: 0 clipping artifact(s) and 4 critical non-cinematic spike(s) detected. Audio MUST be corrected before cinema release.
+
+=================================================================

@@ -162,6 +162,15 @@ function renderResults(data) {
   renderGlobalStats(data.global_stats);
   buildLegend();
 
+  if (data.pdf_ready === false) {
+    downloadBtn.textContent = "⚠️ PDF Unavailable";
+    downloadBtn.disabled = true;
+    downloadBtn.title = "PDF generation failed on the server. Check server logs.";
+  } else {
+    downloadBtn.textContent = "⬇ Download PDF Report";
+    downloadBtn.disabled = false;
+    downloadBtn.title = "";
+  }
   downloadBtn.onclick = () => downloadPDF();
 }
 
